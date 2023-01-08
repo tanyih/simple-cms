@@ -12,6 +12,9 @@
       case 'login':
           require 'pages/login.php';
           break;
+      case 'logout':
+        require 'pages/logout.php';
+        break;
       case 'post':
           require 'pages/post.php';
           break;
