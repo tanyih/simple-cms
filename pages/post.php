@@ -1,6 +1,5 @@
 <?php
    
-   session_start();
 
    require  "parts/header.php";
 ?> 

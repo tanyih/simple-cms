@@ -1,6 +1,45 @@
 <?php
    
-   session_start();
+    // make sure only admin can access
+  if ( !Authentication::whoCanAccess('admin') ) {
+    header('Location: /dashboard');
+    exit;
+  }
+
+  // Step 1: generate CSRF token
+  CSRF::generateToken( 'delete_post_form' );
+
+
+  // Step 2: make sure it's POST request
+  if ( $_SERVER["REQUEST_METHOD"] === 'POST' ) {
+
+    // step 3: do error check
+    $error = FormValidation::validate(
+      $_POST,
+      [
+        'post_id'=> 'required', 
+        'csrf_token' => 'delete_post_form_csrf_token'
+      ]
+    );
+
+    
+   // make sure there is no error
+   if ( !$error ) {
+    // step 4: delete post
+    Post::delete( $_POST['user_id'] );
+      
+  
+      // step 5: remove CSRF token
+      CSRF::removeToken( 'delete_post_form' );
+  
+      // step 6: redirect back to the same page
+      header("Location: /manage-posts");
+      exit;
+    } // end - $error
+
+  } // end - $_SERVER["REQUEST_METHOD"]
+
+  
 
    require  "parts/header.php";
 ?> 

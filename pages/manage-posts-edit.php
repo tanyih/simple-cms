@@ -1,6 +1,70 @@
 <?php
+   // make sure only admin can access
+  if ( !Authentication::whoCanAccess('admin') ) {
+    header('Location: /dashboard');
+    exit;
+  }
+
+  // load post data
+  $post = Post::getPostByID( $_GET['id'] );
+
+  // step 1: set CSRF token
+  CSRF::generateToken( 'edit_post_form' );
+
+
+  // step 2: make sure post request
+  if ( $_SERVER["REQUEST_METHOD"] === 'POST' ) {
+
+    // step 3: do error check
+
+    
+
+      // if both password & confirm_password fields are empty, 
+      // skip error checking for both fields.
+      $rules = [
+        'title' => 'required',
+        'content' => 'content_check',
+        'status' => 'required',
+        'csrf_token' => 'edit_post_form_csrf_token'
+      ];
+
+      
+
+      // if eiter password & confirm_password fields are not empty, 
+      // do error check for both fields
+      $error = FormValidation::validate(
+        $_POST,
+        $rules
+      );
+
+      // if content changed, make sure it cannot belongs to another post
+      // we compare content from database and form for content changes
+      if ( $post['content'] !== $_POST['content'] ) {
+        // do database check to make sure new content wasn't already in use
+        $error .= FormValidation::checkcontentUniqueness( $_POST['content'] );
+      }
+
+      // make sure there is no error
+      if ( !$error ) {
+        // step 4: update post
+        post::update(
+          $post['id'], // id
+          $_POST['title'], // title
+          $_POST['content'],// content
+          $_POST['status'], // status
+          ( $is_password_changed ? $_POST['password'] : null ) // password update if available
+        );
+
+        // step 5: remove the CSRF token
+        CSRF::removeToken( 'edit_post_form' );
+
+        // Step 6: redirect to manage posts page
+        header("Location: /manage-posts");
+        exit;
+
+      }
+  }
    
-   session_start();
 
    require  "parts/header.php";
 ?> 
